@@ -22,3 +22,7 @@ Comity is currently meant to work in conjunction with "Minim":https://github.com
   </p>
 </code>
 </pre>
+
+This template, when executed, will display something like this:
+
+bq. The name John Smith should be split into the first name %{background:#8f8; color:#0f0}John% and the last name %{background:#8f8; color:#0f0}Smith%.
