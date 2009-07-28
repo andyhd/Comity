@@ -22,6 +22,20 @@ class Comity_Test
         return $instances[$name];
     }
 
+    function _handleErrors($flag=TRUE)
+    {
+        if ($flag) {
+            set_error_handler(array($this, '_handleError'));
+        } else {
+            restore_error_handler();
+        }
+    }
+
+    function _handleError($errno, $errstr, $errfile, $errline, $errcontext)
+    {
+        throw new Comity_Exception("$errfile ($errline): $errstr");
+    }
+
     function startExec($cmd)
     {
         array_push($this->stack, array(self::EXEC, $cmd));
@@ -40,10 +54,13 @@ class Comity_Test
         $cmd = preg_replace(',#TEXT,', '"'.addslashes($text).'"', $cmd);
         $cmd = preg_replace(',\$(\w+),', "\$this->vars['$1']", $cmd);
         $cmd = preg_replace(',\b(\w+)\(,', "\$this->$1(", $cmd);
+        $this->_handleErrors();
         try {
             eval("$cmd;");
+            $this->_handleErrors(FALSE);
         } catch (Exception $e) {
-            echo '<span class="comity-error">'.$text.'</span>';
+            echo '<span class="comity-error" title="'.$e->getMessage().'">'.$text.'</span>';
+            $this->_handleErrors(FALSE);
             return;
         }
         echo stripslashes($text);
@@ -67,10 +84,13 @@ class Comity_Test
         $expr = preg_replace(',#TEXT,', '"'.addslashes($text).'"', $expr);
         $expr = preg_replace(',\$(\w+),', "\$this->vars[\"$1\"]", $expr);
         $expr = "return ($expr == \"$text\");";
+        $this->_handleErrors();
         try {
             $result = eval($expr);
+            $this->_handleErrors(FALSE);
         } catch (Exception $e) {
-            echo '<span class="comity-error">', $text, '</span>';
+            echo '<span class="comity-fail">', $text, '</span>';
+            $this->_handleErrors(FALSE);
             return;
         }
         if (!$result) {
