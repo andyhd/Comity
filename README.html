@@ -1,0 +1,24 @@
+<html>
+  <body>
+    <p>
+This is just a proof of concept implementation, based on my very limited test of Concordion (http://www.concordion.org), which looks awesome.
+</p><p>
+By contrast, Comity is a gruesome hack which runs tests inline with report generation, rather than generating static reports offline.
+</p><p>
+The code was cobbled together quickly on the bus this morning, and debugged a little at lunch.
+</p><p>
+It's called Comity because that's the nicest word I found when typing Concord into thesaurus.com :-)
+</p><p>
+Comity is currently meant to work in conjunction with Minim (https://github.com/andyhd/Minim2) by adding some new template functions. These allow you to do the following:
+<pre>
+  &lt;p>
+    The name
+    &lt;? $exec('$result = splitName(#TEXT)') ?>John Smith&lt;? $endExec() ?>
+    should be split into the first name
+    &lt;? $assertEquals('$result->firstName') ?>John&lt;? $endAssert() ?>
+    and the last name
+    &lt;? $assertEquals('$result->lastName') ?>Smith<? $endAssert() ?>.
+  &lt;/p>
+</pre>
+  </body>
+</html>
