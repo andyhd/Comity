@@ -4,14 +4,34 @@ class Comity_Test
     const EXEC = 0;
     const ASSERT = 1;
 
-    var $stack;
-    var $vars;
+    protected $_stack;
+    protected $_vars;
+    protected $_template;
 
     function __construct()
     {
-        $this->stack = array();
-        $this->vars = array();
+        $this->_stack = array();
+        $this->_vars = array();
+        $this->_template = Minim_Template::getInstance();
+        $this->_template->addFunction('exec', '$cmd', '
+            $pc = Comity_Test::getInstance("Test");
+            $pc->startExec($cmd);
+        ');
+        $this->_template->addFunction('endExec', '', '
+            $pc = Comity_Test::getInstance("Test");
+            $pc->endExec();
+        ');
+        $this->_template->addFunction('assertEquals', '$expr', '
+            $pc = Comity_Test::getInstance("Test");
+            $pc->assertEquals($expr);
+        ');
+        $this->_template->addFunction('endAssert', '', '
+            $pc = Comity_Test::getInstance("Test");
+            $pc->endAssert();
+        ');
     }
+
+
 
     static function getInstance($name)
     {
@@ -38,7 +58,7 @@ class Comity_Test
 
     function startExec($cmd)
     {
-        array_push($this->stack, array(self::EXEC, $cmd));
+        array_push($this->_stack, array(self::EXEC, $cmd));
         ob_start();
     }
 
@@ -46,13 +66,13 @@ class Comity_Test
     {
         $text = ob_get_contents();
         ob_end_clean();
-        list($type, $cmd) = array_pop($this->stack);
+        list($type, $cmd) = array_pop($this->_stack);
         if ($type != self::EXEC) {
             throw new Comity_Exception(
                 "exec must be followed by endExec");
         }
         $cmd = preg_replace(',#TEXT,', '"'.addslashes($text).'"', $cmd);
-        $cmd = preg_replace(',\$(\w+),', "\$this->vars['$1']", $cmd);
+        $cmd = preg_replace(',\$(\w+),', "\$this->_vars['$1']", $cmd);
         $cmd = preg_replace(',\b(\w+)\(,', "\$this->$1(", $cmd);
         $this->_handleErrors();
         try {
@@ -68,7 +88,7 @@ class Comity_Test
 
     function assertEquals($expr)
     {
-        array_push($this->stack, array(self::ASSERT, $expr));
+        array_push($this->_stack, array(self::ASSERT, $expr));
         ob_start();
     }
 
@@ -76,13 +96,13 @@ class Comity_Test
     {
         $text = ob_get_contents();
         ob_end_clean();
-        list($type, $expr) = array_pop($this->stack);
+        list($type, $expr) = array_pop($this->_stack);
         if ($type != self::ASSERT) {
             throw new Comity_Exception(
                 "assert must be followed by endAssert");
         }
         $expr = preg_replace(',#TEXT,', '"'.addslashes($text).'"', $expr);
-        $expr = preg_replace(',\$(\w+),', "\$this->vars[\"$1\"]", $expr);
+        $expr = preg_replace(',\$(\w+),', "\$this->_vars[\"$1\"]", $expr);
         $expr = "return ($expr == \"$text\");";
         $this->_handleErrors();
         try {
@@ -98,5 +118,10 @@ class Comity_Test
         } else {
             echo '<span class="comity-pass">', $text, '</span>';
         }
+    }
+
+    function render($template, $context=array())
+    {
+        $this->_template->render($template, $context);
     }
 }
