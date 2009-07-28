@@ -1,0 +1,24 @@
+h2. Comity
+
+This is just a proof of concept implementation, based on my very limited test of "Concordion":http://www.concordion.org, which looks awesome.
+
+By contrast, Comity is a gruesome hack which runs tests inline with report generation, rather than generating static reports offline.
+
+The code was cobbled together quickly on the bus this morning, and debugged a little at lunch.
+
+It's called Comity because that's the nicest word I found when typing Concord into thesaurus.com :-)
+
+Comity is currently meant to work in conjunction with "Minim":https://github.com/andyhd/Minim2 by adding some new template functions. These allow you to do the following:
+
+<pre>
+<code>
+  <p>
+    The name
+    <? $exec('$result = splitName(#TEXT)') ?>John Smith<? $endExec() ?>
+    should be split into the first name
+    <? $assertEquals('$result->firstName') ?>John<? $endAssert() ?>
+    and the last name
+    <? $assertEquals('$result->lastName') ?>Smith<? $endAssert() ?>.
+  </p>
+</code>
+</pre>
